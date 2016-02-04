@@ -1,10 +1,14 @@
 package com.mooduck.games.hungrysnake;
 
+import android.content.Context;
 import android.opengl.GLES20;
 import android.util.Log;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -29,10 +33,10 @@ public class ShaderHandler
         public int getHandle() { return handle; }
     }
 
-    public static Shader loadShaderProgram(String shaderName, String vertexShaderFileName, String fragmentShaderFileName)
+    public static Shader loadShaderProgram(Context context, String shaderName, String vertexShaderFileName, String fragmentShaderFileName)
     {
-        String vertexShaderSource = loadShaderSource(SHADER_LOCATION + shaderName + vertexShaderFileName);
-        String fragmentShaderSource = loadShaderSource(SHADER_LOCATION + shaderName + fragmentShaderFileName);
+        String vertexShaderSource = loadShaderSource(context, SHADER_LOCATION + shaderName + "/" + vertexShaderFileName);
+        String fragmentShaderSource = loadShaderSource(context, SHADER_LOCATION + shaderName + "/" + fragmentShaderFileName);
 
         int vertexShader = compileShaderSource(GLES20.GL_VERTEX_SHADER, vertexShaderSource);
         int fragmentShader = compileShaderSource(GLES20.GL_FRAGMENT_SHADER, fragmentShaderSource);
@@ -65,22 +69,27 @@ public class ShaderHandler
     }
 
     // Load shader's code from file
-    private static String loadShaderSource(String fileName)
+    private static String loadShaderSource(Context context, String fileName)
     {
-        File fin = new File(fileName);
-        String content = ""; // Content of entire source file
+        StringBuffer stringBuffer = new StringBuffer();
         try
         {
-            content = new Scanner(fin).useDelimiter("\\Z").next();
+            InputStream inputStream = context.getAssets().open(fileName);
+            BufferedReader fin = new BufferedReader(new InputStreamReader(inputStream));
+            String line = null;
+            while((line = fin.readLine()) != null)
+            {
+                stringBuffer.append(line);
+            }
         }
         catch (IOException e)
         {
             Log.e("File input", "Failed to load shader");
             e.printStackTrace();
         }
-        Log.v("File input", "Loaded .glsl file:\n" + content);
+        Log.v("File input", "Loaded .glsl file:\n" + stringBuffer.toString());
 
-        return content;
+        return stringBuffer.toString();
     }
 
     private static int compileShaderSource(int type, String source)
