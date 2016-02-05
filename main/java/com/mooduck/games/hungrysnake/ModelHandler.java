@@ -20,12 +20,18 @@ import java.util.Vector;
 
 public class ModelHandler
 {
+    private static HashMap<String, Model> models = new HashMap<>();
+
     public static class Model
     {
-        private FloatBuffer VBO;
-        private ShortBuffer indeces;
+        public FloatBuffer VBO;
+        public ShortBuffer indeces;
 
-        private Model() {}
+        public int vertexCount;
+
+        public static final int COORDS_PER_VERTEX = 3;
+        public static final int VERTEX_STRIDE = COORDS_PER_VERTEX * 4;
+
         private Model(float[] vertices, short[] indeces)
         {
             VBO = ByteBuffer.allocateDirect(vertices.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
@@ -35,18 +41,24 @@ public class ModelHandler
             this.indeces = ByteBuffer.allocateDirect(indeces.length * 2).order(ByteOrder.nativeOrder()).asShortBuffer();
             this.indeces.put(indeces);
             this.indeces.position(0);
+
+            vertexCount = vertices.length / COORDS_PER_VERTEX;
         }
 
         public FloatBuffer getVBO() { return VBO; }
         public ShortBuffer getIndeces() { return indeces; }
     }
 
-    private static HashMap<String, Model> models = new HashMap<>();
+    public static Model get(String modelName)
+    {
+        return models.get(modelName);
+    }
 
     // Load model from .obj file into map "models"
     // Only one object can be loaded at a time
     public static Model loadModel(Context context, int resourceHandle)
     {
+        Model result = null;
         String modelName = "none"; // Name of the model, specified in .obj file
         Vector<Float> verteces = new Vector<>();
         Vector<Short> indeces = new Vector<>();
@@ -62,14 +74,19 @@ public class ModelHandler
                     data = line.split(" ");
                     switch(data[0])
                     {
-                        case "0": // Set model name
+                        case "o": // Set model name
                             modelName = data[1]; break;
                         case "v": // Add vertex data
                             //Log.v("Vertex data", (new Float(data[1])).toString());
                             for(int i = 1; i < data.length; i++) verteces.add(new Float(data[i]));
                             break;
                         case "f": // Add index data
-                            for(int i = 1; i < data.length; i++) indeces.add(new Short(data[i]));
+                            for(int i = 1; i < data.length; i++)
+                            {
+                                Short val = new Short(data[i]);
+                                val--;
+                                indeces.add(val);
+                            }
                             break;
                         default: continue;
                     }
@@ -90,9 +107,9 @@ public class ModelHandler
                     raw_ind[i] = val;
                     i++;
                 }
-                Model result = new Model(raw_vert, raw_ind);
-
-                models.put(modelName, result); // Put new model to map 'models'
+                result = new Model(raw_vert, raw_ind);
+                Log.v("Loaded", modelName);
+                models.put("Cube", result); // Put new model to map 'models'
             }
             finally { fin.close(); }
         }
@@ -101,6 +118,6 @@ public class ModelHandler
             Log.e("Resource", "failed to load model");
             e.printStackTrace();
         }
-        return new Model();
+        return result;
     }
 }
