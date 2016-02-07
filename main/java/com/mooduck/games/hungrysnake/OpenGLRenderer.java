@@ -20,6 +20,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
     private final float[] mViewMatrix = new float[16];
     private final float[] mModelMatrix = new float[16];
     float[] lightColor = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
+    float[] lightPos = new float[] {-2.0f, 0.0f, 3.0f, 1.0f};
     public long last_frame_time = 0;
 
     OpenGLRenderer(Context context) { this.context = context; }
@@ -41,7 +42,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         ShaderHandler.loadShaderProgram(context, "light", "vertex.glsl", "fragment.glsl");
         ShaderHandler.loadShaderProgram(context, "lightSource", "vertex.glsl", "fragment.glsl");
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(mViewMatrix, 0, 3, 3, 9, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mViewMatrix, 0, -3, 3, 9, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
         //Matrix.setLookAtM();
     }
 
@@ -82,6 +83,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(currentProgram, "in_Model_matrix"), 1, false, mModelMatrix, 0);
         GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "lightColor"), 1, lightColor, 0);
         GLES20.glUniform4f(GLES20.glGetUniformLocation(currentProgram, "objectColor"), 1.0f, 0.5f, 0.31f, 1.0f);
+        GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "lightPos"), 1, lightPos, 0);
         // Send data to opengl
         ModelHandler.Model cube = ModelHandler.get("Cube");
         cube.buffer.position(0);
@@ -92,14 +94,13 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glVertexAttribPointer(mNormalHandle, cube.COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
                 cube.VERTEX_STRIDE, cube.buffer);
-        cube.indexes.position(0);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, 36, GLES20.GL_UNSIGNED_SHORT, cube.indexes);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mNormalHandle);
 
         // Draw light source
         // Set new Mvp
-        Matrix.translateM(mModelMatrix, 0, 1.2f, 1.0f, 2.0f);
+        Matrix.translateM(mModelMatrix, 0, lightPos[0], lightPos[1], lightPos[2]);
         Matrix.scaleM(mModelMatrix, 0, 0.1f, 0.1f, 0.1f);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
         Matrix.multiplyMM(mModelMatrix, 0, mMVPMatrix, 0, mModelMatrix, 0);
@@ -116,8 +117,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glVertexAttribPointer(mPositionHandle, cube.COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
                 cube.VERTEX_STRIDE, cube.buffer);
-        cube.indexes.position(0);
-        GLES20.glDrawElements(GLES20.GL_TRIANGLES, 36, GLES20.GL_UNSIGNED_SHORT, cube.indexes);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
     }
 }
