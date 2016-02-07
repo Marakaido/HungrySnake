@@ -10,7 +10,6 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
-import java.nio.ShortBuffer;
 import java.util.HashMap;
 import java.util.Vector;
 
@@ -30,19 +29,14 @@ public class ModelHandler
         * { vertex data, normal}
         */
         public FloatBuffer buffer;
-        public ShortBuffer indexes;
 
         public int vertexCount;
 
         public static final int COORDS_PER_VERTEX = 3;
         public static final int VERTEX_STRIDE = COORDS_PER_VERTEX * 2 * 4;
 
-        private Model(float[] buffer_data, short[] indexes)
+        private Model(float[] buffer_data)
         {
-            this.indexes = ByteBuffer.allocateDirect(indexes.length * 2).order(ByteOrder.nativeOrder()).asShortBuffer();
-            this.indexes.put(indexes);
-            this.indexes.position(0);
-            
             // buffer will incorporate both vertexes vertices and normals
             buffer = ByteBuffer.allocateDirect(buffer_data.length * 4).order(ByteOrder.nativeOrder()).asFloatBuffer();
             // Write all vertices and normals
@@ -55,7 +49,6 @@ public class ModelHandler
         }
 
         public FloatBuffer getbuffer() { return buffer; }
-        public ShortBuffer getIndexes() { return indexes; }
     }
 
     public static Model get(String modelName)
@@ -69,7 +62,7 @@ public class ModelHandler
     {
         Model result = null; // A reference to a model that is being created
 
-        Vector<Float> verteces = new Vector<>(); // Temporary container for vertex data
+        Vector<Float> vertexes = new Vector<>(); // Temporary container for vertex data
         Vector<Float> normals = new Vector<>(); // Temporary container for normal data
         Vector<Short> indexes = new Vector<>(); // Temporary container for index data
         Vector<Short> normal_indexes = new Vector<>(); // Temporary container for normal index data
@@ -77,35 +70,27 @@ public class ModelHandler
         InputStream inputStream = context.getResources().openRawResource(resourceHandle);
         // Populate vectors with data
         // Name of the model, specified in .obj file
-        String modelName = parse_obj_file(inputStream, verteces, normals, indexes, normal_indexes);
-        
-        // Form index_data
-        int i = 0;
-        short[] index_data = new short[indexes.size()];
-        for(Short val : indexes) { index_data[i] = val; i++; }
+        String modelName = parse_obj_file(inputStream, vertexes, normals, indexes, normal_indexes);
 
         /* Form buffer_data */
-        i=0;
-        float[] buffer_data = new float[verteces.size() * 2];
-        // Write all vertex data
-        for(int j = 0; i < verteces.size(); i++, j+=4)
+        float[] buffer_data = new float[indexes.size() * 3 * 2];
+        for(int i = 0, j = 0; i < indexes.size(); i++, j++)
         {
-            buffer_data[j] = verteces.elementAt(i);
-            buffer_data[++j] = verteces.elementAt(++i);
-            buffer_data[++j] = verteces.elementAt(++i);
-        }
-        // Write all normal data
-        i = 0;
-        for(Short index : normal_indexes)
-        {
-            buffer_data[index_data[i] * 6 + 3] = normals.elementAt(index*3);
-            buffer_data[index_data[i] * 6 + 4] = normals.elementAt(index*3 + 1);
-            buffer_data[index_data[i] * 6 + 5] = normals.elementAt(index*3 + 2);
-            i++;
+            int vertex_start_pos = indexes.elementAt(i) * 3;
+            // Write vertex, associated with vertex_start_pos index
+            buffer_data[j] = vertexes.elementAt(vertex_start_pos);
+            buffer_data[++j] = vertexes.elementAt(vertex_start_pos + 1);
+            buffer_data[++j] = vertexes.elementAt(vertex_start_pos + 2);
+
+            int normal_start_pos = normal_indexes.elementAt(i) * 3;
+            // Write normal, associated with normal_start_pos index
+            buffer_data[++j] = normals.elementAt(normal_start_pos);
+            buffer_data[++j] = normals.elementAt(normal_start_pos + 1);
+            buffer_data[++j] = normals.elementAt(normal_start_pos + 2);
         }
         
         // Form new Model object
-        result = new Model(buffer_data, index_data);
+        result = new Model(buffer_data);
         // Register new model in ModelHandler
         models.put(modelName, result);
         
@@ -115,7 +100,7 @@ public class ModelHandler
     }
     
     private static String parse_obj_file(InputStream inputStream,
-                                       Vector<Float> verteces,
+                                       Vector<Float> vertexes,
                                        Vector<Float> normals,
                                        Vector<Short> indexes,
                                        Vector<Short> normal_indexes)
@@ -139,7 +124,7 @@ public class ModelHandler
                             modelName = data[1]; break;
                         case "v": // Add vertex data
                             //Log.v("Vertex data", (new Float(data[1])).toString());
-                            for(int i = 1; i < data.length; i++) verteces.add(new Float(data[i]));
+                            for(int i = 1; i < data.length; i++) vertexes.add(new Float(data[i]));
                             break;
                         case "vn": // Add vertex normal data
                             for(int i = 1; i < data.length; i++) normals.add(new Float(data[i]));
