@@ -21,6 +21,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
     private final float[] mModelMatrix = new float[16];
     float[] lightColor = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
     float[] lightPos = new float[] {-2.0f, 0.0f, 3.0f, 1.0f};
+    float[] cameraPos = new float[] {0.0f, 0.0f, 3.0f, 1.0f};
     public long last_frame_time = 0;
     public double time = 0;
 
@@ -56,7 +57,9 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
 
         time = SystemClock.uptimeMillis();
         time /= 10000;
-        Matrix.setLookAtM(mViewMatrix, 0, (float)(9*Math.cos(time)), 3, (float)(9*Math.sin(time)), 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        cameraPos[0] = (float)(9*Math.cos(time));
+        cameraPos[2] = (float)(9*Math.sin(time));
+        Matrix.setLookAtM(mViewMatrix, 0, cameraPos[0], cameraPos[1], cameraPos[2], 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Draw scene
         drawScene(mMVPMatrix);
@@ -91,6 +94,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "lightColor"), 1, lightColor, 0);
         GLES20.glUniform4f(GLES20.glGetUniformLocation(currentProgram, "objectColor"), 1.0f, 0.5f, 0.31f, 1.0f);
         GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "lightPos"), 1, lightPos, 0);
+        GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "view_position"), 1, cameraPos, 0);
         // Send data to opengl
         ModelHandler.Model cube = ModelHandler.get("Cube");
         cube.buffer.position(0);
