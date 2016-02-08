@@ -22,6 +22,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
     float[] lightColor = new float[] {1.0f, 1.0f, 1.0f, 1.0f};
     float[] lightPos = new float[] {-2.0f, 0.0f, 3.0f, 1.0f};
     public long last_frame_time = 0;
+    public double time = 0;
 
     OpenGLRenderer(Context context) { this.context = context; }
 
@@ -52,6 +53,12 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
         // Clear color and depth buffers
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
+
+        time = SystemClock.uptimeMillis();
+        time /= 10000;
+        Matrix.setLookAtM(mViewMatrix, 0, (float)(9*Math.cos(time)), 3, (float)(9*Math.sin(time)), 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+
+        // Draw scene
         drawScene(mMVPMatrix);
     }
 
