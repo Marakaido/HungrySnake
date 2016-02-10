@@ -38,6 +38,8 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         //GLES20.glDepthMask(true);
         // Load a model
         ModelHandler.loadModel(this.context, R.raw.box);
+        ModelHandler.loadModel(this.context, R.raw.rock);
+        ModelHandler.loadModel(this.context, R.raw.lizard);
 
         //context.getAssets().list("shaders");
         // Load a shader program
@@ -96,7 +98,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "lightPos"), 1, lightPos, 0);
         GLES20.glUniform4fv(GLES20.glGetUniformLocation(currentProgram, "view_position"), 1, cameraPos, 0);
         // Send data to opengl
-        ModelHandler.Model cube = ModelHandler.get("Cube");
+        ModelHandler.Model cube = ModelHandler.get("Lizard");
         cube.buffer.position(0);
         GLES20.glVertexAttribPointer(mPositionHandle, cube.COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
@@ -105,12 +107,13 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glVertexAttribPointer(mNormalHandle, cube.COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
                 cube.VERTEX_STRIDE, cube.buffer);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, cube.vertexCount);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
         GLES20.glDisableVertexAttribArray(mNormalHandle);
 
         // Draw light source
         // Set new Mvp
+        cube = ModelHandler.get("Box");
         Matrix.translateM(mModelMatrix, 0, lightPos[0], lightPos[1], lightPos[2]);
         Matrix.scaleM(mModelMatrix, 0, 0.1f, 0.1f, 0.1f);
         Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
@@ -128,7 +131,7 @@ public class OpenGLRenderer implements GLSurfaceView.Renderer
         GLES20.glVertexAttribPointer(mPositionHandle, cube.COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
                 cube.VERTEX_STRIDE, cube.buffer);
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 36);
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, cube.vertexCount);
         GLES20.glDisableVertexAttribArray(mPositionHandle);
     }
 }

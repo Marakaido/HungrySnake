@@ -73,16 +73,16 @@ public class ModelHandler
         String modelName = parse_obj_file(inputStream, vertexes, normals, indexes, normal_indexes);
 
         /* Form buffer_data */
-        float[] buffer_data = new float[indexes.size() * 3 * 2];
+        float[] buffer_data = new float[indexes.size() * 3 * 4];
         for(int i = 0, j = 0; i < indexes.size(); i++, j++)
         {
-            int vertex_start_pos = indexes.elementAt(i) * 3;
+            int vertex_start_pos = (indexes.elementAt(i) - 1) * 3;
             // Write vertex, associated with vertex_start_pos index
             buffer_data[j] = vertexes.elementAt(vertex_start_pos);
             buffer_data[++j] = vertexes.elementAt(vertex_start_pos + 1);
             buffer_data[++j] = vertexes.elementAt(vertex_start_pos + 2);
 
-            int normal_start_pos = normal_indexes.elementAt(i) * 3;
+            int normal_start_pos = (normal_indexes.elementAt(i) - 1) * 3;
             // Write normal, associated with normal_start_pos index
             buffer_data[++j] = normals.elementAt(normal_start_pos);
             buffer_data[++j] = normals.elementAt(normal_start_pos + 1);
@@ -135,14 +135,10 @@ public class ModelHandler
                                 face_data = data[i].split("/");
 
                                 // Vertex index
-                                Short index = new Short(face_data[0]);
-                                index--;
-                                indexes.add(index);
+                                indexes.add(new Short(face_data[0]));
 
                                 // Normal index
-                                index = new Short(face_data[2]);
-                                index--;
-                                normal_indexes.add(index);
+                                normal_indexes.add(new Short(face_data[2]));
                             }
                             break;
                         default: continue;
