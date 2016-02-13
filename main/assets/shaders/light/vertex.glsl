@@ -11,7 +11,7 @@ varying vec4 fragment_pos;
 void main()
 {
     vec4 model = in_Model_matrix * in_vertex;
-    gl_Position = in_Projection_matrix * in_View_matrix * model;
+    gl_Position = in_Projection_matrix * (in_View_matrix * model);
     normal = in_normal;
     fragment_pos = model;
 }

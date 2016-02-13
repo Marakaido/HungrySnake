@@ -100,6 +100,8 @@ public class ShaderHandler
         GLES20.glShaderSource(shader, source);
         GLES20.glCompileShader(shader);
 
+        Log.i("Loaded shader", GLES20.glGetShaderInfoLog(shader));
+
         return shader;
     }
 }
